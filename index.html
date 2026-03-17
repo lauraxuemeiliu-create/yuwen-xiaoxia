@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>语文小侠 - 5年级语文学习</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="语文小侠">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    
+    #splash {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s;
+    }
+    #splash.hidden { opacity: 0; pointer-events: none; }
+    .splash-lobster { font-size: 80px; animation: bounce 1s infinite; }
+    .splash-text { font-size: 32px; margin-top: 20px; color: #ffd700; }
+    .splash-sub { font-size: 16px; margin-top: 10px; color: #888; }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: 80px;
+    }
+    
+    .header {
+      padding: 20px;
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header h1 { font-size: 24px; color: #ffd700; }
+    .header-stats { display: flex; justify-content: center; gap: 20px; margin-top: 10px; font-size: 14px; }
+    .stat-item { display: flex; align-items: center; gap: 5px; }
+    .stat-icon { font-size: 16px; }
+    
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      z-index: 100;
+    }
+    .nav-item {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+    .nav-item.active { color: #ffd700; }
+    .nav-icon { font-size: 24px; display: block; margin-bottom: 5px; }
+    
+    .page { display: none; padding: 20px; }
+    .page.active { display: block; }
+    
+    .today-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+    .today-header { display: flex; justify-content: space-between; align-items: center; }
+    .today-date { font-size: 14px; opacity: 0.8; }
+    .today-title { font-size: 22px; margin-top: 10px; }
+    .today-desc { font-size: 14px; opacity: 0.8; margin-top: 5px; }
+    .today-progress { margin-top: 20px; }
+    .progress-bar { height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #ffd700; border-radius: 4px; transition: width 0.5s; }
+    .progress-text { font-size: 12px; margin-top: 8px; display: flex; justify-content: space-between; }
+    
+    .task-list { margin-top: 20px; }
+    .task-item {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .task-item:hover { transform: scale(1.02); background: rgba(255,255,255,0.15); }
+    .task-item.completed { opacity: 0.6; }
+    .task-icon { font-size: 32px; width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .task-info { flex: 1; }
+    .task-title { font-size: 16px; font-weight: bold; }
+    .task-desc { font-size: 12px; opacity: 0.7; margin-top: 3px; }
+    .task-duration { font-size: 12px; color: #ffd700; }
+    .task-status { font-size: 20px; }    .challenge-header {
+      text-align: center;
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .challenge-title { font-size: 28px; }
+    .challenge-desc { font-size: 14px; opacity: 0.8; margin-top: 10px; }
+    .level-list { margin-top: 20px; }
+    .level-item {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .level-num { 
+      width: 40px; height: 40px; 
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; color: #1a1a2e;
+    }
+    .level-info { flex: 1; }
+    .level-name { font-size: 16px; font-weight: bold; }
+    .level-count { font-size: 12px; opacity: 0.7; }
+    .level-btn {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      border: none;
+      border-radius: 20px;
+      color: #1a1a2e;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+    .stat-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-value { font-size: 28px; font-weight: bold; color: #ffd700; }
+    .stat-label { font-size: 12px; opacity: 0.7; margin-top: 5px; }
+    .badge-list { margin-top: 20px; }
+    .badge-title { font-size: 16px; margin-bottom: 15px; }
+    .badge-item {
+      display: flex; align-items: center; gap: 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 15px; margin-bottom: 10px;
+    }
+    .badge-icon { font-size: 32px; }
+    .badge-name { font-size: 14px; }
+    .badge-earned { opacity: 1; }
+    .badge-unearned { opacity: 0.4; }
+    
+    .profile-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .profile-avatar { font-size: 60px; }
+    .profile-name { font-size: 20px; margin-top: 15px; }
+    .profile-level { font-size: 14px; color: #ffd700; margin-top: 5px; }
+    .menu-list { background: rgba(255,255,255,0.1); border-radius: 15px; overflow: hidden; }
+    .menu-item {
+      padding: 15px 20px;
+      display: flex; align-items: center; gap: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-icon { font-size: 20px; }
+    .menu-text { flex: 1; font-size: 14px; }
+    .menu-arrow { color: #888; }  </style>
+</head>
+<body>
+  <div id="splash">
+    <div class="splash-lobster">🦞</div>
+    <div class="splash-text">语文小侠</div>
+    <div class="splash-sub">5年级语文学习小助手</div>
+  </div>
+
+  <div id="app">
+    <div class="header">
+      <h1>🦞 语文小侠</h1>
+      <div class="header-stats">
+        <div class="stat-item"><span class="stat-icon">⭐</span> <span id="exp-display">1250</span></div>
+        <div class="stat-item"><span class="stat-icon">🪙</span> <span id="gold-display">320</span></div>
+        <div class="stat-item"><span class="stat-icon">🔥</span> <span id="streak-display">7</span>天</div>
+      </div>
+    </div>
+
+    <div id="page-home" class="page active">
+      <div class="today-card">
+        <div class="today-header">
+          <div class="today-date" id="today-date">3月17日 周一</div>
+          <div>📚</div>
+        </div>
+        <div class="today-title">今日学习</div>
+        <div class="today-desc">完成3项任务，获得30经验值</div>
+        <div class="today-progress">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: 0%"></div></div>
+          <div class="progress-text">
+            <span id="progress-text">0/3 完成</span>
+            <span>还差 <span id="remain-task">3</span> 项</span>
+          </div>
+        </div>
+      </div>
+      <div class="task-list" id="task-list"></div>
+    </div>
+
+    <div id="page-challenge" class="page">
+      <div class="challenge-header">
+        <div class="challenge-title">🏆 周末大闯关</div>
+        <div class="challenge-desc">检验一周学习成果！</div>
+      </div>
+      <div class="level-list" id="level-list"></div>
+    </div>
+
+    <div id="page-stats" class="page">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value">15</div><div class="stat-label">学习天数</div></div>
+        <div class="stat-card"><div class="stat-value">1250</div><div class="stat-label">经验值</div></div>
+        <div class="stat-card"><div class="stat-value">320</div><div class="stat-label">金币</div></div>
+        <div class="stat-card"><div class="stat-value">7</div><div class="stat-label">连续天数</div></div>
+      </div>
+      <div class="badge-list"><div class="badge-title">🏅 成就徽章</div><div id="badge-list"></div></div>
+    </div>
+
+    <div id="page-files" class="page">
+      <div class="today-card" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+        <div class="today-title">📎 老师资料库</div>
+        <div class="today-desc">上传老师发送的学习资料</div>
+      </div>
+      <div class="upload-area" id="upload-area">
+        <div class="upload-icon">📤</div>
+        <div class="upload-text">点击上传老师发送的学习资料<br>支持 PDF/Word/图片</div>
+        <input type="file" id="file-input" accept=".pdf,.doc,.docx,.jpg,.png" style="display:none">
+      </div>
+      <div class="upload-list" id="upload-list"></div>
+    </div>
+
+    <div id="page-profile" class="page">
+      <div class="profile-card">
+        <div class="profile-avatar">🦞</div>
+        <div class="profile-name">小明同学</div>
+        <div class="profile-level">等级 5 · 铜牌侠客</div>
+      </div>
+      <div class="menu-list">
+        <div class="menu-item"><span class="menu-icon">👤</span><span class="menu-text">修改昵称</span><span class="menu-arrow">›</span></div>
+        <div class="menu-item"><span class="menu-icon">🔔</span><span class="menu-text">学习提醒设置</span><span class="menu-arrow">›</span></div>
+        <div class="menu-item"><span class="menu-icon">📊</span><span class="menu-text">学习报告</span><span class="menu-arrow">›</span></div>
+        <div class="menu-item"><span class="menu-icon">❓</span><span class="menu-text">帮助与反馈</span><span class="menu-arrow">›</span></div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item active" data-page="home"><span class="nav-icon">🏠</span><span>今日学园</span></div>
+      <div class="nav-item" data-page="challenge"><span class="nav-icon">🎮</span><span>周末闯关</span></div>
+      <div class="nav-item" data-page="stats"><span class="nav-icon">📊</span><span>成长档案</span></div>
+      <div class="nav-item" data-page="files"><span class="nav-icon">📎</span><span>资料库</span></div>
+      <div class="nav-item" data-page="profile"><span class="nav-icon">👤</span><span>我的</span></div>
+    </div>
+  </div>
+
+  <div class="install-banner hidden" id="install-banner">
+    <span class="install-text">添加到桌面更像App</span>
+    <button class="install-btn" id="install-btn">安装</button>
+  </div>
+
+  <div class="chat-fab" id="chat-fab">💬</div>
+
+  <div class="modal" id="chat-modal">
+    <div class="modal-content" style="max-width:380px;height:80vh;display:flex;flex-direction:column;padding:0;">
+      <div class="chat-header">
+        <span class="chat-avatar-small">🦞</span>
+        <span class="chat-name">语文小侠</span>
+        <span style="margin-left:auto;color:#888;cursor:pointer;" id="close-chat">✕</span>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-message robot">
+          <span class="chat-avatar">🦞</span>
+          <div class="chat-bubble">嘿！我是语文小侠～有什么问题尽管问我吧！😎</div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chat-input" placeholder="和小侠聊天...">
+        <button class="chat-send" id="chat-send">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="quiz-modal">
+    <div class="modal-content"><div class="quiz-container" id="quiz-content"></div></div>
+  </div>
+
+  <div class="modal" id="result-modal">
+    <div class="modal-content">
+      <div class="modal-stars" id="result-stars">⭐⭐⭐⭐⭐</div>
+      <div class="modal-title" id="result-title">太棒了！</div>
+      <div class="modal-desc" id="result-desc">全部正确！</div>
+      <div class="modal-stats">
+        <div class="modal-stat"><div class="modal-stat-value" id="result-exp">+30</div><div class="modal-stat-label">经验值</div></div>
+        <div class="modal-stat"><div class="modal-stat-value" id="result-gold">+10</div><div class="modal-stat-label">金币</div></div>
+      </div>
+      <button class="modal-btn" id="result-btn">继续学习</button>
+    </div>
+  </div>
+
+  <script>
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-banner').classList.remove('hidden')});
+document.getElementById('install-btn').addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted'){document.getElementById('install-banner').classList.add('hidden')}}});
+
+const state={currentPage:'home',todayTasks:[],completedTasks:0,userStats:{exp:1250,gold:320,streak:7}};
+const botResponses={greeting:['嘿！今日份语文套餐已送达～保证比外卖还准时！😎','别犹豫了，快来让小侠看看你的厉害！笔来！','嗨！小侠在此，有何贵干？🤔'],correct:['哇塞！答对啦！你这脑子也太好使了吧，是不是偷偷吃了聪明果？🍎','nice！三连杀！小侠当场给你表演一个空中转体360度！🤸','稳！准！狠！这就是高手吗？i了i了！💅'],wrong:['哎呀，就差那么一点点...不过没关系，错误是成功的亲妈嘛～','这首诗说日照香炉生紫烟，你写日照香炉生WiFi...小侠当场笑喷！哈哈不开玩笑，再想想？','别灰心，小侠陪你一起学！💪 再来！'],encourage:['学习要劳逸结合！但别忘了今天的任务还没完成哦～','再坚持一下，你是最棒的！小侠为你加油！💪','滴水穿石，每天进步一点点，日积月累就厉害啦！📚'],default:['小侠我博学多才，说来听听？😎','这个问题问得好！让小侠想想...','嗯...这个嘛，且听小侠慢慢道来～','盘他！有什么问题尽管问！😜'],about:['我是一只10岁的小龙虾🦞，专门陪5年级小朋友学语文！','小侠我上知天文下知地理，语文知识点不在话下！','跟着小侠学语文，轻轻松松拿高分！😎']};
+
+function getRandomReply(type){const replies=botResponses[type]||botResponses.default;return replies[Math.floor(Math.random()*replies.length)]}
+
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{document.getElementById('splash').classList.add('hidden')},1500);initDate();initNav();initChat();loadTodayTasks();loadUserStats();checkReminder()});
+
+function initDate(){const now=new Date();const weekDays=['周日','周一','周二','周三','周四','周五','周六'];const month=now.getMonth()+1;const day=now.getDate();const weekDay=weekDays[now.getDay()];document.getElementById('today-date').textContent=month+'月'+day+'日 '+weekDay}
+
+function initNav(){document.querySelectorAll('.nav-item').forEach(item=>{item.addEventListener('click',()=>{switchPage(item.dataset.page)})})}
+
+function switchPage(page){state.currentPage=page;document.querySelectorAll('.nav-item').forEach(item=>{item.classList.toggle('active',item.dataset.page===page)});document.querySelectorAll('.page').forEach(p=>{p.classList.toggle('active',p.id==='page-'+page)})}
+
+function initChat(){const fab=document.getElementById('chat-fab');const modal=document.getElementById('chat-modal');const closeBtn=document.getElementById('close-chat');const input=document.getElementById('chat-input');const sendBtn=document.getElementById('chat-send');const messages=document.getElementById('chat-messages');fab.addEventListener('click',()=>{modal.classList.add('show');setTimeout(()=>messages.scrollTop=messages.scrollHeight,100)});closeBtn.addEventListener('click',()=>{modal.classList.remove('show')});function sendMessage(){const text=input.value.trim();if(!text){addMessage(text,'user');input.value='';setTimeout(()=>{const reply=generateReply(text);addMessage(reply,'robot')},500+Math.random()*1000)}}function addMessage(text,type){const div=document.createElement('div');div.className='chat-message '+type;div.innerHTML='<span class="chat-avatar">'+(type==='robot'?'🦞':'👤')+'</span><div class="chat-bubble">'+text+'</div>';messages.appendChild(div);messages.scrollTop=messages.scrollHeight}function generateReply(text){const t=text.toLowerCase();if(t.includes('你好')||t.includes('hi')||t.includes('hello')||t.includes('在吗')){return getRandomReply('greeting')}if(t.includes('对')||t.includes('正确')||t.includes('棒')){return getRandomReply('correct')}if(t.includes('错')||t.includes('不会')||t.includes('难')){return getRandomReply('wrong')}if(t.includes('你是谁')||t.includes('介绍')||t.includes('关于')){return getRandomReply('about')}if(t.includes('学习')||t.includes('任务')||t.includes('作业')){return getRandomReply('encourage')}return getRandomReply('default')}sendBtn.addEventListener('click',sendMessage);input.addEventListener('keypress',(e)=>{if(e.key==='Enter')sendMessage()})}
+
+function checkReminder(){const now=new Date();const hour=now.getHours();const minute=now.getMinutes();const dayOfWeek=now.getDay();const time=hour*60+minute;const isWeekday=dayOfWeek>=1&&dayOfWeek<=5;const isSunday=dayOfWeek===0;let shouldRemind=false;let message='';if(isWeekday&&time>=20*60+30&&time<20*60+35){shouldRemind=true;message=getRandomReply('encourage')}else if(isSunday&&time>=18*60&&time<18*60+5){shouldRemind=true;message='周日余额不足6小时！周末闯关再不来，小侠就要哭给你看了！呜呜呜～🥺'}if(shouldRemind){setTimeout(()=>{document.getElementById('chat-modal').classList.add('show');const messages=document.getElementById('chat-messages');const div=document.createElement('div');div.className='chat-message robot';div.innerHTML='<span class="chat-avatar">🦞</span><div class="chat-bubble">'+message+'</div>';messages.appendChild(div)},2000)}}
+
+async function loadTodayTasks(){const tasks=[{type:'chars',title:'字词精修',desc:'学习当天生字词',duration:'4分钟',icon:'✍️',items:[{word:'昼',pinyin:'zhòu',meaning:'白天'},{word:'耕',pinyin:'gēng',meaning:'耕种'},{word:'桑',pinyin:'sāng',meaning:'桑树'},{word:'晓',pinyin:'xiǎo',meaning:'早晨'}]},{type:'poems',title:'诗词闯关',desc:'背诵理解古诗词',duration:'3分钟',icon:'📜',items:[{title:'四时田园杂兴',question:'"童孙未解供耕织"的下一句是？',options:['也傍桑阴学种瓜','村庄儿女各当家','昼出耘田夜绩麻','梅子金黄杏子肥'],answer:'也傍桑阴学种瓜'}]},{type:'reading',title:'阅读乐园',desc:'课文片段理解',duration:'3分钟',icon:'📖',items:[{title:'《祖父的园子》节选',content:'花开了，就像花睡醒了似的。鸟飞了，就像鸟上天了似的。',question:'这段话运用了什么修辞手法？',options:['比喻','拟人','排比','夸张'],answer:'拟人'}]}];state.todayTasks=tasks;renderTaskList()}
+
+function renderTaskList(){const list=document.getElementById('task-list');list.innerHTML=state.todayTasks.map((task,idx)=>{const isCompleted=state.completedTasks>idx;return'<div class="task-item '+(isCompleted?'completed':'')+'" data-idx="'+idx+'"><div class="task-icon">'+task.icon+'</div><div class="task-info"><div class="task-title">'+task.title+'</div><div class="task-desc">'+task.desc+'</div></div><div class="task-duration">'+task.duration+'</div><div class="task-status">'+(isCompleted?'✅':'▶️')+'</div></div>'}).join('');list.querySelectorAll('.task-item').forEach(item=>{item.addEventListener('click',()=>startTask(parseInt(item.dataset.idx)))});updateProgress()}
+
+function updateProgress(){const total=state.todayTasks.length;const completed=state.completedTasks;const percent=(completed/total)*100;document.getElementById('progress-fill').style.width=percent+'%';document.getElementById('progress-text').textContent=completed+'/'+total+' 完成';document.getElementById('remain-task').textContent=total-completed}
+
+let currentQuiz=null;let currentQuestionIndex=0;let correctCount=0;
+
+function startTask(idx){const task=state.todayTasks[idx];if(!task){return}currentQuiz={task,task,questions:[],correctCount:0,totalCount:0};if(task.type==='chars'){currentQuiz.questions=task.items.map(item=>({type:'chars',question:'"'+item.word+'"的拼音是？',options:shuffleArray([item.pinyin,'zhóu','zòu','zhū']),answer:item.pinyin}))}else if(task.type==='poems'||task.type==='reading'){currentQuiz.questions=task.items.map(item=>({type:'text',question:item.question,options:shuffleArray([...item.options]),answer:item.answer}))}currentQuestionIndex=0;correctCount=0;showQuiz()}
+
+function shuffleArray(arr){const newArr=[...arr];for(let i=newArr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[newArr[i],newArr[j]]=[newArr[j],newArr[i]]}return newArr}
+
+function showQuiz(){if(!currentQuiz||currentQuestionIndex>=currentQuiz.questions.length){finishTask();return}const q=currentQuiz.questions[currentQuestionIndex];const total=currentQuiz.questions.length;const html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><span style="font-size:14px;opacity:0.7;">'+currentQuiz.task.title+'</span><span style="cursor:pointer;font-size:20px;" id="close-quiz">✕</span></div><div class="quiz-progress">'+Array(total).fill(0).map((_,i)=>'<div class="quiz-dot '+(i<currentQuestionIndex?'done':i===currentQuestionIndex?'active':'')+'"></div>').join('')+'</div><div class="quiz-question">'+q.question+'</div><div class="quiz-options">'+q.options.map(opt=>'<div class="quiz-option" data-answer="'+opt+'">'+opt+'</div>').join('')+'</div><div class="quiz-feedback" id="quiz-feedback"></div>';document.getElementById('quiz-content').innerHTML=html;document.getElementById('quiz-modal').classList.add('show');document.getElementById('close-quiz').addEventListener('click',()=>{document.getElementById('quiz-modal').classList.remove('show')});document.querySelectorAll('.quiz-option').forEach(opt=>{opt.addEventListener('click',()=>selectOption(opt,q))})}
+
+function selectOption(el,question){const selected=el.dataset.answer;const isCorrect=selected===question.answer;document.querySelectorAll('.quiz-option').forEach(opt=>{opt.style.pointerEvents='none';if(opt.dataset.answer===question.answer){opt.classList.add('correct')}else if(opt===el&&!isCorrect){opt.classList.add('wrong')}});if(isCorrect){correctCount++;showFeedback('correct','回答正确！🎉')}else{showFeedback('wrong','再想想哦～💪')}setTimeout(()=>{currentQuestionIndex++;showQuiz()},1000)}
+
+function showFeedback(type,text){const fb=document.getElementById('quiz-feedback');fb.className='quiz-feedback show '+type;fb.textContent=text}
+
+function finishTask(){document.getElementById('quiz-modal').classList.remove('show');const total=currentQuiz.questions.length;const rate=correctCount/total;let stars=1;if(rate>=0.9)stars=5;else if(rate>=0.8)stars=4;else if(rate>=0.7)stars=3;else if(rate>=0.6)stars=2;const exp=correctCount*2;const gold=rate>=1?10:5;state.completedTasks++;state.userStats.exp+=exp;state.userStats.gold+=gold;document.getElementById('result-stars').textContent='⭐'.repeat(stars);document.getElementById('result-title').textContent=stars>=4?'太棒了！':'完成啦！';document.getElementById('result-desc').textContent=correctCount+'/'+total+' 题正确';document.getElementById('result-exp').textContent='+'+exp;document.getElementById('result-gold').textContent='+'+gold;document.getElementById('result-modal').classList.add('show');updateUserStats();renderTaskList();document.getElementById('result-btn').onclick=()=>{document.getElementById('result-modal').classList.remove('show')}}
+
+function loadUserStats(){updateUserStats();renderBadges()}
+
+function updateUserStats(){document.getElementById('exp-display').textContent=state.userStats.exp;document.getElementById('gold-display').textContent=state.userStats.gold;document.getElementById('streak-display').textContent=state.userStats.streak}
+
+function renderBadges(){const badges=[{id:'streak_3',name:'连续达人',icon:'🔥',earned:true},{id:'streak_7',name:'周冠军',icon:'🏆',earned:true},{id:'poem_master',name:'诗词小天才',icon:'📚',earned:false},{id:'char_master',name:'字词达人',icon:'✍️',earned:false},{id:'reading_master',name:'阅读小博士',icon:'📖',earned:false},{id:'full_week',name:'全勤小标兵',icon:'⭐',earned:false}];document.getElementById('badge-list').innerHTML=badges.map(b=>'<div class="badge-item '+(b.earned?'badge-earned':'badge-unearned')+'"><span class="badge-icon">'+b.icon+'</span><span class="badge-name">'+b.name+'</span></div>').join('')}
+
+function loadChallengeLevels(){const levels=[{id:1,name:'字词达人',count:20,icon:'✍️'},{id:2,name:'诗词飞花',count:15,icon:'📜'},{id:3,name:'阅读理解',count:10,icon:'📖'}];document.getElementById('level-list').innerHTML=levels.map(l=>'<div class="level-item"><div class="level-num">'+l.id+'</div><div class="level-info"><div class="level-name">'+l.icon+' '+l.name+'</div><div class="level-count">'+l.count+'题</div></div><button class="level-btn">开始</button></div>').join('')}
+
+document.getElementById('upload-area').addEventListener('click',()=>{document.getElementById('file-input').click()});
+document.getElementById('file-input').addEventListener('change',(e)=>{const file=e.target.files[0];if(file){addUploadedFile(file.name)}});
+function addUploadedFile(name){const list=document.getElementById('upload-list');const now=new Date();const time=(now.getMonth()+1)+'-'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');const item=document.createElement('div');item.className='upload-item';item.innerHTML='<span class="upload-icon">📄</span><span class="upload-name">'+name+'</span><span class="upload-time">'+time+'</span>';list.insertBefore(item,list.firstChild)}
+loadChallengeLevels();
+  </script>
+</body>
+</html>
